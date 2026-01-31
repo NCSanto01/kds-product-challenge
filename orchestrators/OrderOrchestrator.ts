@@ -16,13 +16,26 @@ export class OrderOrchestrator {
 			this.emit({
 				id: getRandomId(),
 				state: "PENDING",
-				items: [],
+				items: [
+					{
+						id: getRandomId(),
+						name: "Burger",
+						image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100",
+						price: { currency: "EUR", amount: 12.5 },
+					},
+					{
+						id: getRandomId(),
+						name: "Fries",
+						image: "https://images.unsplash.com/photo-1573082883907-809827900505?w=100",
+						price: { currency: "EUR", amount: 4.5 },
+					},
+				],
 			})
 			this.maxOrders--
 			if (this.maxOrders <= 0) {
 				clearInterval(this.interval)
 			}
-		}, 2000)
+		}, 4000)
 		return this.eventEmitter
 	}
 }

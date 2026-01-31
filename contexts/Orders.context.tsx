@@ -11,6 +11,7 @@ import {
 export type OrdersContextProps = {
 	orders: Array<Order>
 	pickup: (order: Order) => void
+	updateOrderState: (orderId: string, newState: Order["state"]) => void
 }
 
 export const OrdersContext = createContext<OrdersContextProps>(
@@ -33,15 +34,28 @@ export function OrdersProvider(props: OrdersProviderProps) {
 		})
 	}, [])
 
-	const pickup = (order: Order) => {
-		alert(
-			"necesitamos eliminar del kanban a la orden recogida! Rapido! antes que nuestra gente de tienda se confunda!",
+	const updateOrderState = (orderId: string, newState: Order["state"]) => {
+		setOrders((prev) =>
+			prev.map((order) =>
+				order.id === orderId ? { ...order, state: newState } : order,
+			),
 		)
+	}
+
+	const pickup = (orderToPickup: Order) => {
+		const order = orders.find((o) => o.id === orderToPickup.id)
+		if (order?.state === "READY") {
+			updateOrderState(order.id, "DELIVERED")
+			console.log(`Order ${order.id} picked up!`)
+		} else {
+			alert("¡El pedido aún no está listo!")
+		}
 	}
 
 	const context = {
 		orders,
 		pickup,
+		updateOrderState,
 	}
 
 	return (

@@ -3,21 +3,30 @@ import Column from "@/components/Column/Column"
 import { useOrders } from "@/contexts/Orders.context"
 
 export default function Kanban() {
-	const { orders } = useOrders()
+	const { orders, updateOrderState } = useOrders()
 
 	return (
 		<section className={s["pk-kanban"]}>
 			<Column
-				title="Pendiente"
+				title="📥 Pendiente"
+				state="PENDING"
 				orders={orders.filter((i) => i.state === "PENDING")}
-				onClick={() =>
-					alert(
-						"mmmmm..., deberias de modificar esto! tenemos que hacer que las ordenes lleguen hasta listo y se entreguen!",
-					)
-				}
+				onClick={(order) => updateOrderState(order.id, "IN_PROGRESS")}
+				onDropOrder={updateOrderState}
 			/>
-			<Column title="En preparación" orders={[]} />
-			<Column title="Listo" orders={[]} />
+			<Column
+				title="🍳 En preparación"
+				state="IN_PROGRESS"
+				orders={orders.filter((i) => i.state === "IN_PROGRESS")}
+				onClick={(order) => updateOrderState(order.id, "READY")}
+				onDropOrder={updateOrderState}
+			/>
+			<Column
+				title="✅ Listo para recoger"
+				state="READY"
+				orders={orders.filter((i) => i.state === "READY")}
+				onDropOrder={updateOrderState}
+			/>
 		</section>
 	)
 }
