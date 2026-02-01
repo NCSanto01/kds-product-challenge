@@ -13,8 +13,10 @@ export type OrdersContextProps = {
 	pickup: (order: Order) => void
 	updateOrderState: (orderId: string, newState: Order["state"], userName?: string) => void
 	assignOrder: (orderId: string, userName: string) => void
+	assignToBestWorker: (orderId: string) => void
 	draggingOrderId: string | null
 	setDraggingOrderId: (id: string | null) => void
+	workload: { max: number; workers: Record<string, number> }
 	socket: Socket | null
 }
 
@@ -29,6 +31,10 @@ export function OrdersProvider(props: OrdersProviderProps) {
 	const [orders, setOrders] = useState<Array<Order>>([])
 	const [socket, setSocket] = useState<Socket | null>(null)
 	const [draggingOrderId, setDraggingOrderId] = useState<string | null>(null)
+	const [workload, setWorkload] = useState<{ max: number; workers: Record<string, number> }>({
+		max: 5,
+		workers: {},
+	})
 
 	useEffect(() => {
 		const newSocket = io(SOCKET_URL)
@@ -36,6 +42,10 @@ export function OrdersProvider(props: OrdersProviderProps) {
 
 		newSocket.emit("getInitialOrders", (initialOrders: Order[]) => {
 			setOrders(initialOrders)
+		})
+
+		newSocket.emit("getWorkload", (initialWorkload: any) => {
+			setWorkload(initialWorkload)
 		})
 
 		newSocket.on("newOrder", (order: Order) => {
@@ -46,6 +56,10 @@ export function OrdersProvider(props: OrdersProviderProps) {
 			setOrders((prev) =>
 				prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)),
 			)
+		})
+
+		newSocket.on("workloadUpdated", (newWorkload: any) => {
+			setWorkload(newWorkload)
 		})
 
 		return () => {
@@ -61,6 +75,10 @@ export function OrdersProvider(props: OrdersProviderProps) {
 		socket?.emit("assignOrder", { orderId, userName })
 	}
 
+	const assignToBestWorker = (orderId: string) => {
+		socket?.emit("assignToBestWorker", { orderId })
+	}
+
 	const pickup = (orderToPickup: Order) => {
 		if (orderToPickup.state === "READY") {
 			updateOrderState(orderToPickup.id, "DELIVERED")
@@ -74,8 +92,10 @@ export function OrdersProvider(props: OrdersProviderProps) {
 		pickup,
 		updateOrderState,
 		assignOrder,
+		assignToBestWorker,
 		draggingOrderId,
 		setDraggingOrderId,
+		workload,
 		socket,
 	}
 

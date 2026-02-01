@@ -44,6 +44,19 @@ export class OrdersGateway implements OnGatewayInit {
         try {
             const updatedOrder = this.ordersService.updateOrderState(payload.id, payload.state, payload.userName);
             this.server.emit('orderUpdated', updatedOrder);
+            this.server.emit('workloadUpdated', this.ordersService.getWorkload());
+            return updatedOrder;
+        } catch (e) {
+            return { error: e.message };
+        }
+    }
+
+    @SubscribeMessage('assignToBestWorker')
+    handleAssignToBestWorker(client: any, payload: { orderId: string }) {
+        try {
+            const updatedOrder = this.ordersService.assignToBestWorker(payload.orderId);
+            this.server.emit('orderUpdated', updatedOrder);
+            this.server.emit('workloadUpdated', this.ordersService.getWorkload());
             return updatedOrder;
         } catch (e) {
             return { error: e.message };
@@ -55,6 +68,7 @@ export class OrdersGateway implements OnGatewayInit {
         try {
             const updatedOrder = this.ordersService.assignOrder(payload.orderId, payload.userName);
             this.server.emit('orderUpdated', updatedOrder);
+            this.server.emit('workloadUpdated', this.ordersService.getWorkload());
             return updatedOrder;
         } catch (e) {
             return { error: e.message };
@@ -74,6 +88,11 @@ export class OrdersGateway implements OnGatewayInit {
     @SubscribeMessage('getUsers')
     handleGetUsers() {
         return this.usersService.getUsers();
+    }
+
+    @SubscribeMessage('getWorkload')
+    handleGetWorkload() {
+        return this.ordersService.getWorkload();
     }
 
     @SubscribeMessage('removeRider')

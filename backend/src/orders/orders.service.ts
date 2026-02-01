@@ -3,15 +3,18 @@ import { Order } from '../dtos/Order.dto';
 import { Item } from '../dtos/Item.dto';
 import { Subject } from 'rxjs';
 import { RidersService } from '../riders/riders.service';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class OrdersService implements OnModuleInit {
     private orders: Order[] = [];
     public orderEvents$ = new Subject<Order>();
+    private readonly MAX_ORDERS = 5;
 
     constructor(
         @Inject(forwardRef(() => RidersService))
         private readonly ridersService: RidersService,
+        private readonly usersService: UsersService,
     ) { }
 
     onModuleInit() {
@@ -20,6 +23,22 @@ export class OrdersService implements OnModuleInit {
 
     getOrders(): Order[] {
         return this.orders;
+    }
+
+    getWorkload() {
+        const workload = {};
+        const activeOrders = this.orders.filter(o => o.state === 'IN_PROGRESS');
+
+        activeOrders.forEach(order => {
+            if (order.assignedTo) {
+                workload[order.assignedTo] = (workload[order.assignedTo] || 0) + 1;
+            }
+        });
+
+        return {
+            max: this.MAX_ORDERS,
+            workers: workload
+        };
     }
 
     updateOrderState(orderId: string, newState: Order['state'], userName?: string): Order {
@@ -52,6 +71,34 @@ export class OrdersService implements OnModuleInit {
             throw new Error('Order not found');
         }
         order.assignedTo = userName;
+        return order;
+    }
+
+    assignToBestWorker(orderId: string): Order {
+        const order = this.orders.find((o) => o.id === orderId);
+        if (!order) throw new Error('Order not found');
+
+        const workers = this.usersService.getUsers().filter(u => u.role === 'WORKER');
+        if (workers.length === 0) throw new Error('No workers available');
+
+        const workload = this.getWorkload().workers;
+
+        // Find worker with minimum orders
+        let bestWorker = workers[0];
+        let minOrders = workload[bestWorker.name] || 0;
+
+        for (const worker of workers) {
+            const count = workload[worker.name] || 0;
+            if (count < minOrders) {
+                minOrders = count;
+                bestWorker = worker;
+            }
+        }
+
+        order.assignedTo = bestWorker.name;
+        order.state = 'IN_PROGRESS';
+
+        this.ridersService.handleOrderUpdate(orderId, 'IN_PROGRESS');
         return order;
     }
 

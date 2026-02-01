@@ -1,0 +1,82 @@
+@import "/styles/variables.scss";
+
+.pk-workload {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    padding: 12px 24px;
+    background-color: $gray-900;
+    border-radius: 20px;
+    margin-bottom: 24px;
+    border: 1px solid $gray-800;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    animation: slideDown 0.4s ease-out;
+
+    &__item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    &__circle-container {
+        position: relative;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    &__svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        transform: rotate(-90deg);
+        width: 100%;
+        height: 100%;
+    }
+
+    &__bg-circle {
+        fill: none;
+        stroke: $gray-800;
+        stroke-width: 5;
+    }
+
+    &__progress-circle {
+        fill: none;
+        stroke-width: 5;
+        stroke-linecap: round;
+        transition: stroke-dasharray 0.8s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.3s ease;
+
+        &--low {
+            stroke: #4caf50;
+        }
+
+        &--medium {
+            stroke: #ffc107;
+        }
+
+        &--high {
+            stroke: #f44336;
+        }
+    }
+
+    &__initial {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: $white;
+        z-index: 1;
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

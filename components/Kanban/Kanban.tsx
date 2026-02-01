@@ -1,13 +1,14 @@
 import { useState } from "react"
 import s from "./Kanban.module.scss"
 import Column from "@/components/Column/Column"
+import WorkloadMonitor from "@/components/WorkloadMonitor/WorkloadMonitor"
 import { useOrders } from "@/contexts/Orders.context"
 import { useUser } from "@/contexts/User.context"
 import { Order } from "@/dtos/Order.dto"
 import classNames from "classnames"
 
 export default function Kanban() {
-	const { orders, updateOrderState } = useOrders()
+	const { orders, updateOrderState, assignToBestWorker } = useOrders()
 	const { currentUser } = useUser()
 	const [showHistory, setShowHistory] = useState(false)
 	const [showCanceled, setShowCanceled] = useState(false)
@@ -40,7 +41,10 @@ export default function Kanban() {
 	}
 
 	const handlePendingClick = (order: Order) => {
-		if (currentUser?.role === "ADMIN") return
+		if (currentUser?.role === "ADMIN") {
+			assignToBestWorker(order.id)
+			return
+		}
 		handleUpdateState(order.id, "IN_PROGRESS")
 	}
 
@@ -80,6 +84,8 @@ export default function Kanban() {
 					</button>
 				</div>
 			</header>
+
+			{currentUser?.role === "ADMIN" && <WorkloadMonitor />}
 
 			<section className={s["pk-kanban"]}>
 				<Column
