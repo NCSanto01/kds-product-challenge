@@ -35,5 +35,10 @@
     background-color: #f9cc01;
     padding: 10px;
     animation: appear 300ms 500ms forwards;
+
+    &--ready {
+      background-color: #4caf50; // Green for READY state
+      color: white;
+    }
   }
 }

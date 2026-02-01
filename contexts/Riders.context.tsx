@@ -6,6 +6,7 @@ import {
 	useState,
 } from "react"
 import { useOrders } from "@/contexts/Orders.context"
+import { useUser } from "@/contexts/User.context"
 import { getRandomInterval } from "@/helpers/utilities"
 import { Rider } from "@/dtos/Rider.dto"
 
@@ -29,6 +30,7 @@ export type RidersProviderProps = {
 export function RidersProvider(props: RidersProviderProps) {
 	const [ridersData, setRidersData] = useState<Array<RiderData>>([])
 	const { orders, pickup, socket } = useOrders()
+	const { currentUser } = useUser()
 
 	useEffect(() => {
 		if (!socket) return
@@ -62,10 +64,27 @@ export function RidersProvider(props: RidersProviderProps) {
 	}
 
 	const context = {
-		riders: ridersData.map((r) => ({
-			...r,
-			pickup: () => handlePickup(r.orderWanted),
-		})),
+		riders: ridersData
+			.filter((r) => {
+				if (currentUser?.role === "ADMIN") return true
+
+				const order = orders.find((o) => o.id === r.orderWanted)
+				if (!order) return false
+
+				// Worker sees ALL pending riders
+				if (order.state === "PENDING") return true
+
+				// Worker only sees riders for orders assigned to them
+				return order.assignedTo === currentUser?.name
+			})
+			.map((r) => {
+				const order = orders.find((o) => o.id === r.orderWanted)
+				return {
+					...r,
+					isReady: order?.state === "READY",
+					pickup: () => handlePickup(r.orderWanted),
+				}
+			}),
 	}
 
 	return (

@@ -21,23 +21,40 @@ export default function Kanban() {
 		if (currentUser?.role === "ADMIN") {
 			// Admin cannot move orders directly to IN_PROGRESS (must use worker zones)
 			if (newState === "IN_PROGRESS") return
-			// Admin can move orders from PENDING to READY/CANCELED directly
+
+			// Admin CAN move orders from PENDING to READY or CANCELED directly
+			// The updateOrderState in backend will keep assignedTo undefined if it was PENDING
+			updateOrderState(orderId, newState, currentUser.name)
+			return
 		}
 
 		// Worker Rules:
 		if (currentUser?.role === "WORKER") {
-			// Can drag PENDING -> IN_PROGRESS to self-assign
+			// Self-assigning: PENDING -> IN_PROGRESS
 			const isSelfAssigning = order.state === "PENDING" && newState === "IN_PROGRESS"
 
-			// For READY or CANCELED, order MUST be assigned to the current worker
-			if (!isSelfAssigning && (newState === "READY" || newState === "CANCELED")) {
-				if (order.assignedTo !== currentUser.name) {
-					return
+			if (isSelfAssigning) {
+				updateOrderState(orderId, newState, currentUser.name)
+				return
+			}
+
+			// For READY or CANCELED, order MUST be assigned to THIS worker
+			if (newState === "READY" || newState === "CANCELED") {
+				if (order.assignedTo === currentUser.name) {
+					updateOrderState(orderId, newState, currentUser.name)
 				}
+				return
+			}
+
+			// Moving back to PENDING (Unassigning) - Only if it was theirs? 
+			// For now allow it if it was theirs.
+			if (newState === "PENDING") {
+				if (order.assignedTo === currentUser.name) {
+					updateOrderState(orderId, newState, currentUser.name)
+				}
+				return
 			}
 		}
-
-		updateOrderState(orderId, newState, currentUser?.name)
 	}
 
 	const handlePendingClick = (order: Order) => {

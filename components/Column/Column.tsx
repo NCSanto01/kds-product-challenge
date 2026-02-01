@@ -16,17 +16,20 @@ export type ColumnProps = {
 
 export default function Column(props: ColumnProps) {
 	const [isOver, setIsOver] = useState(false)
+	const [activeWorker, setActiveWorker] = useState<string | null>(null)
 	const { currentUser, allUsers } = useUser()
 	const { assignOrder, updateOrderState, draggingOrderId, setDraggingOrderId } = useOrders()
 
 	const handleDragStart = (e: React.DragEvent, orderId: string) => {
 		e.dataTransfer.setData("orderId", orderId)
 		e.dataTransfer.effectAllowed = "move"
-		setDraggingOrderId(orderId)
+		// Delaying the state update to let the browser initialize the drag ghost first
+		setTimeout(() => setDraggingOrderId(orderId), 0)
 	}
 
 	const handleDragEnd = () => {
 		setDraggingOrderId(null)
+		setActiveWorker(null)
 	}
 
 	const handleDragOver = (e: React.DragEvent) => {
@@ -37,7 +40,11 @@ export default function Column(props: ColumnProps) {
 	const handleDrop = (e: React.DragEvent) => {
 		e.preventDefault()
 		setIsOver(false)
-		const orderId = e.dataTransfer.getData("orderId")
+
+		const orderId = draggingOrderId || e.dataTransfer.getData("orderId")
+
+		if (!orderId) return
+
 		// If it's Admin and IN_PROGRESS, we don't want the default column drop
 		if (currentUser?.role === "ADMIN" && props.state === "IN_PROGRESS") return
 
@@ -70,7 +77,11 @@ export default function Column(props: ColumnProps) {
 					{workers.map(worker => (
 						<div
 							key={worker.id}
-							className={s["pk-column__worker-zone"]}
+							className={classNames(s["pk-column__worker-zone"], {
+								[s["pk-column__worker-zone--active"]]: activeWorker === worker.name
+							})}
+							onDragEnter={() => setActiveWorker(worker.name)}
+							onDragLeave={() => setActiveWorker(null)}
 							onDragOver={(e) => {
 								e.preventDefault()
 								e.stopPropagation()
@@ -79,6 +90,7 @@ export default function Column(props: ColumnProps) {
 								e.preventDefault()
 								e.stopPropagation()
 								handleWorkerDrop(worker.name)
+								setActiveWorker(null)
 							}}
 						>
 							<div className={s["pk-column__worker-circle"]}>

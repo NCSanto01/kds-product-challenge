@@ -108,7 +108,7 @@ export class OrdersService implements OnModuleInit {
             if (pendingOrders.length >= 10) return; // Limit to 10 pending orders
 
             const newOrder: Order = {
-                id: Math.random().toString(36).substr(2, 9).toUpperCase(),
+                id: Math.floor(1000 + Math.random() * 9000).toString(),
                 state: 'PENDING',
                 items: this.generateRandomItems(),
             };

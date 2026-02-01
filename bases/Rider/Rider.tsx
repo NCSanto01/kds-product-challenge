@@ -1,12 +1,16 @@
 import { Rider as RiderProps } from "@/dtos/Rider.dto"
 import s from "./Rider.module.scss"
+import classNames from "classnames"
+
 export default function Rider(props: RiderProps) {
 	return (
 		<div
 			onClick={() => props.pickup()}
 			className={s["pk-rider__container"]}
 		>
-			<div className={s["pk-rider__order"]}>
+			<div className={classNames(s["pk-rider__order"], {
+				[s["pk-rider__order--ready"]]: props.isReady
+			})}>
 				<b>{props.orderWanted} !!</b>
 			</div>
 			<svg
