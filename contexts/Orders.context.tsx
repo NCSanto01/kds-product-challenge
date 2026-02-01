@@ -1,5 +1,4 @@
 import { Order } from "@/dtos/Order.dto"
-import { OrderOrchestrator } from "@/orchestrators/OrderOrchestrator"
 import {
 	ReactNode,
 	createContext,
@@ -7,11 +6,13 @@ import {
 	useEffect,
 	useState,
 } from "react"
+import { io, Socket } from "socket.io-client"
 
 export type OrdersContextProps = {
 	orders: Array<Order>
 	pickup: (order: Order) => void
 	updateOrderState: (orderId: string, newState: Order["state"]) => void
+	socket: Socket | null
 }
 
 export const OrdersContext = createContext<OrdersContextProps>(
@@ -19,39 +20,42 @@ export const OrdersContext = createContext<OrdersContextProps>(
 	{},
 )
 
-export type OrdersProviderProps = {
-	children: ReactNode
-}
+const SOCKET_URL = "http://localhost:3001"
 
 export function OrdersProvider(props: OrdersProviderProps) {
 	const [orders, setOrders] = useState<Array<Order>>([])
+	const [socket, setSocket] = useState<Socket | null>(null)
 
 	useEffect(() => {
-		const orderOrchestrator = new OrderOrchestrator()
-		const listener = orderOrchestrator.run()
-		listener.on("order", (order) => {
+		const newSocket = io(SOCKET_URL)
+		setSocket(newSocket)
+
+		newSocket.emit("getInitialOrders", (initialOrders: Order[]) => {
+			setOrders(initialOrders)
+		})
+
+		newSocket.on("newOrder", (order: Order) => {
 			setOrders((prev) => [...prev, order])
 		})
+
+		newSocket.on("orderUpdated", (updatedOrder: Order) => {
+			setOrders((prev) =>
+				prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)),
+			)
+		})
+
+		return () => {
+			newSocket.close()
+		}
 	}, [])
 
 	const updateOrderState = (orderId: string, newState: Order["state"]) => {
-		setOrders((prev) =>
-			prev.map((order) => {
-				if (order.id !== orderId) return order
-				// Prevent moving orders out of DELIVERED or CANCELED
-				if (order.state === "DELIVERED" || order.state === "CANCELED") {
-					return order
-				}
-				return { ...order, state: newState }
-			}),
-		)
+		socket?.emit("updateOrderState", { id: orderId, state: newState })
 	}
 
 	const pickup = (orderToPickup: Order) => {
-		const order = orders.find((o) => o.id === orderToPickup.id)
-		if (order?.state === "READY") {
-			updateOrderState(order.id, "DELIVERED")
-			console.log(`Order ${order.id} picked up!`)
+		if (orderToPickup.state === "READY") {
+			updateOrderState(orderToPickup.id, "DELIVERED")
 		} else {
 			alert("¡El pedido aún no está listo!")
 		}
@@ -61,6 +65,7 @@ export function OrdersProvider(props: OrdersProviderProps) {
 		orders,
 		pickup,
 		updateOrderState,
+		socket,
 	}
 
 	return (
@@ -68,6 +73,10 @@ export function OrdersProvider(props: OrdersProviderProps) {
 			{props.children}
 		</OrdersContext.Provider>
 	)
+}
+
+export type OrdersProviderProps = {
+	children: ReactNode
 }
 
 export const useOrders = () => useContext(OrdersContext)

@@ -28,49 +28,34 @@ export type RidersProviderProps = {
 
 export function RidersProvider(props: RidersProviderProps) {
 	const [ridersData, setRidersData] = useState<Array<RiderData>>([])
-	const [assignedOrders, setAssignedOrders] = useState<string[]>([])
-	const { orders, pickup } = useOrders()
+	const { orders, pickup, socket } = useOrders()
 
 	useEffect(() => {
-		const order = orders.find(
-			(order) => !assignedOrders.includes(order.id) && order.state !== "CANCELED",
-		)
-		if (order && order.state !== "DELIVERED") {
-			setAssignedOrders((prev) => [...prev, order.id])
-			setTimeout(
-				() => {
-					// Check again if order was canceled during the timeout
-					setRidersData((prev) => {
-						const currentOrder = orders.find((o) => o.id === order.id)
-						if (!currentOrder || currentOrder.state === "CANCELED") return prev
-						return [
-							...prev,
-							{
-								orderWanted: order.id,
-							},
-						]
-					})
-				},
-				getRandomInterval(4_000, 10_000),
-			)
+		if (!socket) return
+
+		socket.emit("getInitialRiders", (initialRiders: RiderData[]) => {
+			setRidersData(initialRiders)
+		})
+
+		socket.on("riderAdded", (rider: RiderData) => {
+			setRidersData((prev) => [...prev, rider])
+		})
+
+		socket.on("riderRemoved", (rider: RiderData) => {
+			setRidersData((prev) => prev.filter((r) => r.orderWanted !== rider.orderWanted))
+		})
+
+		return () => {
+			socket.off("riderAdded")
+			socket.off("riderRemoved")
 		}
-	}, [orders, assignedOrders])
-
-	// Automatically remove riders for canceled orders
-	useEffect(() => {
-		setRidersData((prev) =>
-			prev.filter((rider) => {
-				const order = orders.find((o) => o.id === rider.orderWanted)
-				return order && order.state !== "CANCELED"
-			}),
-		)
-	}, [orders])
+	}, [socket])
 
 	const handlePickup = (orderId: string) => {
 		const currentOrder = orders.find((o) => o.id === orderId)
 		if (currentOrder?.state === "READY") {
 			pickup(currentOrder)
-			setRidersData((prev) => prev.filter((r) => r.orderWanted !== orderId))
+			socket?.emit("removeRider", { orderId: orderId })
 		} else {
 			alert(`¡El pedido #${orderId} todavía no está listo para el repartidor!`)
 		}
@@ -89,5 +74,6 @@ export function RidersProvider(props: RidersProviderProps) {
 		</RidersContext.Provider>
 	)
 }
+
 
 export const useRiders = () => useContext(RidersContext)
