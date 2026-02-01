@@ -47,8 +47,11 @@ export default function Column(props: ColumnProps) {
 			onDragLeave={handleDragLeave}
 			onDrop={handleDrop}
 		>
-			<div className={s["pk-column__title"]}>
-				<h3>{props.title}</h3>
+			<div className={s["pk-column__header"]}>
+				<div className={s["pk-column__title"]}>
+					<h3>{props.title}</h3>
+				</div>
+				<span className={s["pk-column__count"]}>{props.orders.length}</span>
 			</div>
 			<div className={s["pk-column__list"]}>
 				<AnimatePresence>
@@ -59,14 +62,21 @@ export default function Column(props: ColumnProps) {
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
 							transition={{ duration: 0.2 }}
-							whileHover={{ scale: 1.01 }}
-							whileTap={{ scale: 0.99 }}
-							draggable
+							whileHover={props.state !== "DELIVERED" ? { scale: 1.01 } : {}}
+							whileTap={props.state !== "DELIVERED" ? { scale: 0.99 } : {}}
+							draggable={props.state !== "DELIVERED"}
 							onDragStart={(e) =>
+								props.state !== "DELIVERED" &&
 								handleDragStart(e as unknown as React.DragEvent, order.id)
 							}
-							onClick={() => props.onClick && props.onClick(order)}
-							className={s["pk-card"]}
+							onClick={() =>
+								props.state !== "DELIVERED" &&
+								props.onClick &&
+								props.onClick(order)
+							}
+							className={classNames(s["pk-card"], {
+								[s["pk-card--delivered"]]: props.state === "DELIVERED",
+							})}
 						>
 							<div className={s["pk-card__header"]}>
 								<span>
