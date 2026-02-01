@@ -12,6 +12,11 @@
   margin-top: 10px;
   display: flex;
   justify-content: flex-end;
+
+  &__toggles {
+    display: flex;
+    gap: 12px;
+  }
 }
 
 .pk-kanban {

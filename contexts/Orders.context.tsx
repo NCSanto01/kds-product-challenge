@@ -36,9 +36,14 @@ export function OrdersProvider(props: OrdersProviderProps) {
 
 	const updateOrderState = (orderId: string, newState: Order["state"]) => {
 		setOrders((prev) =>
-			prev.map((order) =>
-				order.id === orderId ? { ...order, state: newState } : order,
-			),
+			prev.map((order) => {
+				if (order.id !== orderId) return order
+				// Prevent moving orders out of DELIVERED or CANCELED
+				if (order.state === "DELIVERED" || order.state === "CANCELED") {
+					return order
+				}
+				return { ...order, state: newState }
+			}),
 		)
 	}
 

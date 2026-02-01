@@ -32,22 +32,39 @@ export function RidersProvider(props: RidersProviderProps) {
 	const { orders, pickup } = useOrders()
 
 	useEffect(() => {
-		const order = orders.find((order) => !assignedOrders.includes(order.id))
+		const order = orders.find(
+			(order) => !assignedOrders.includes(order.id) && order.state !== "CANCELED",
+		)
 		if (order && order.state !== "DELIVERED") {
 			setAssignedOrders((prev) => [...prev, order.id])
 			setTimeout(
 				() => {
-					setRidersData((prev) => [
-						...prev,
-						{
-							orderWanted: order.id,
-						},
-					])
+					// Check again if order was canceled during the timeout
+					setRidersData((prev) => {
+						const currentOrder = orders.find((o) => o.id === order.id)
+						if (!currentOrder || currentOrder.state === "CANCELED") return prev
+						return [
+							...prev,
+							{
+								orderWanted: order.id,
+							},
+						]
+					})
 				},
 				getRandomInterval(4_000, 10_000),
 			)
 		}
 	}, [orders, assignedOrders])
+
+	// Automatically remove riders for canceled orders
+	useEffect(() => {
+		setRidersData((prev) =>
+			prev.filter((rider) => {
+				const order = orders.find((o) => o.id === rider.orderWanted)
+				return order && order.state !== "CANCELED"
+			}),
+		)
+	}, [orders])
 
 	const handlePickup = (orderId: string) => {
 		const currentOrder = orders.find((o) => o.id === orderId)
