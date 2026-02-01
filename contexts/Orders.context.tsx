@@ -11,7 +11,10 @@ import { io, Socket } from "socket.io-client"
 export type OrdersContextProps = {
 	orders: Array<Order>
 	pickup: (order: Order) => void
-	updateOrderState: (orderId: string, newState: Order["state"]) => void
+	updateOrderState: (orderId: string, newState: Order["state"], userName?: string) => void
+	assignOrder: (orderId: string, userName: string) => void
+	draggingOrderId: string | null
+	setDraggingOrderId: (id: string | null) => void
 	socket: Socket | null
 }
 
@@ -25,6 +28,7 @@ const SOCKET_URL = "http://localhost:3001"
 export function OrdersProvider(props: OrdersProviderProps) {
 	const [orders, setOrders] = useState<Array<Order>>([])
 	const [socket, setSocket] = useState<Socket | null>(null)
+	const [draggingOrderId, setDraggingOrderId] = useState<string | null>(null)
 
 	useEffect(() => {
 		const newSocket = io(SOCKET_URL)
@@ -49,8 +53,12 @@ export function OrdersProvider(props: OrdersProviderProps) {
 		}
 	}, [])
 
-	const updateOrderState = (orderId: string, newState: Order["state"]) => {
-		socket?.emit("updateOrderState", { id: orderId, state: newState })
+	const updateOrderState = (orderId: string, newState: Order["state"], userName?: string) => {
+		socket?.emit("updateOrderState", { id: orderId, state: newState, userName })
+	}
+
+	const assignOrder = (orderId: string, userName: string) => {
+		socket?.emit("assignOrder", { orderId, userName })
 	}
 
 	const pickup = (orderToPickup: Order) => {
@@ -65,6 +73,9 @@ export function OrdersProvider(props: OrdersProviderProps) {
 		orders,
 		pickup,
 		updateOrderState,
+		assignOrder,
+		draggingOrderId,
+		setDraggingOrderId,
 		socket,
 	}
 

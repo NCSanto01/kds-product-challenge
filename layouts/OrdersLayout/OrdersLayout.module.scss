@@ -11,13 +11,22 @@
 
   &__navbar {
     width: 100%;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    justify-content: flex-start;
+    padding: 12px 20px;
     border-bottom: 1px solid $gray-900;
-    align-items: flex-start;
+    background-color: $white;
+
+    &-content {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    &-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
   }
 
   &__app {

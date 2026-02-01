@@ -1,0 +1,57 @@
+@import "/styles/variables.scss";
+
+.pk-user-selector {
+    &__wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background-color: $secondary;
+        color: $primary;
+        padding: 6px 14px;
+        border-radius: 20px;
+        border: 1px solid $primary;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 10px rgba($primary, 0.1);
+
+        &:hover {
+            background-color: darken($secondary, 3%);
+            transform: translateY(-1px);
+        }
+    }
+
+    &__emoji {
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+    }
+
+    &__select {
+        background: transparent;
+        color: $primary;
+        border: none;
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+        outline: none;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0;
+        -webkit-appearance: none;
+        appearance: none;
+
+        option {
+            background-color: #fff;
+            color: $gray-800;
+            text-transform: none;
+            font-weight: 400;
+        }
+    }
+
+    &__arrow {
+        font-size: 0.7rem;
+        color: rgba($primary, 0.6);
+        pointer-events: none;
+        margin-left: 2px;
+    }
+}

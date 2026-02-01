@@ -22,7 +22,7 @@ export class OrdersService implements OnModuleInit {
         return this.orders;
     }
 
-    updateOrderState(orderId: string, newState: Order['state']): Order {
+    updateOrderState(orderId: string, newState: Order['state'], userName?: string): Order {
         const order = this.orders.find((o) => o.id === orderId);
         if (!order) {
             throw new Error('Order not found');
@@ -34,7 +34,24 @@ export class OrdersService implements OnModuleInit {
         }
 
         order.state = newState;
+
+        // Auto-assignment logic
+        if (newState === 'IN_PROGRESS' && userName) {
+            order.assignedTo = userName;
+        } else if (newState === 'PENDING') {
+            order.assignedTo = undefined;
+        }
+
         this.ridersService.handleOrderUpdate(orderId, newState);
+        return order;
+    }
+
+    assignOrder(orderId: string, userName: string): Order {
+        const order = this.orders.find((o) => o.id === orderId);
+        if (!order) {
+            throw new Error('Order not found');
+        }
+        order.assignedTo = userName;
         return order;
     }
 

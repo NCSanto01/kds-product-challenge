@@ -7,6 +7,7 @@ import {
 import { Server } from 'socket.io';
 import { OrdersService } from './orders.service';
 import { RidersService } from '../riders/riders.service';
+import { UsersService } from '../users/users.service';
 import { Order } from '../dtos/Order.dto';
 
 @WebSocketGateway({
@@ -21,6 +22,7 @@ export class OrdersGateway implements OnGatewayInit {
     constructor(
         private readonly ordersService: OrdersService,
         private readonly ridersService: RidersService,
+        private readonly usersService: UsersService,
     ) { }
 
     afterInit() {
@@ -38,9 +40,20 @@ export class OrdersGateway implements OnGatewayInit {
     }
 
     @SubscribeMessage('updateOrderState')
-    handleUpdateOrderState(client: any, payload: { id: string; state: Order['state'] }) {
+    handleUpdateOrderState(client: any, payload: { id: string; state: Order['state']; userName?: string }) {
         try {
-            const updatedOrder = this.ordersService.updateOrderState(payload.id, payload.state);
+            const updatedOrder = this.ordersService.updateOrderState(payload.id, payload.state, payload.userName);
+            this.server.emit('orderUpdated', updatedOrder);
+            return updatedOrder;
+        } catch (e) {
+            return { error: e.message };
+        }
+    }
+
+    @SubscribeMessage('assignOrder')
+    handleAssignOrder(client: any, payload: { orderId: string; userName: string }) {
+        try {
+            const updatedOrder = this.ordersService.assignOrder(payload.orderId, payload.userName);
             this.server.emit('orderUpdated', updatedOrder);
             return updatedOrder;
         } catch (e) {
@@ -58,9 +71,13 @@ export class OrdersGateway implements OnGatewayInit {
         return this.ridersService.getRiders();
     }
 
+    @SubscribeMessage('getUsers')
+    handleGetUsers() {
+        return this.usersService.getUsers();
+    }
+
     @SubscribeMessage('removeRider')
     handleRemoveRider(client: any, payload: { orderId: string }) {
         this.ridersService.removeRider(payload.orderId);
     }
 }
-
