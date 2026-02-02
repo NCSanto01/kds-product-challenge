@@ -111,6 +111,7 @@ export class OrdersService implements OnModuleInit {
                 id: Math.floor(1000 + Math.random() * 9000).toString(),
                 state: 'PENDING',
                 items: this.generateRandomItems(),
+                createdAt: Date.now(),
             };
 
             this.orders.push(newOrder);

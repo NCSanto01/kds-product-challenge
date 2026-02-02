@@ -5,4 +5,5 @@ export type Order = {
 	state: "PENDING" | "IN_PROGRESS" | "READY" | "DELIVERED" | "CANCELED"
 	items: Array<Item>
 	assignedTo?: string;
+	createdAt: number;
 }

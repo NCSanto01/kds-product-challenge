@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import classNames from "classnames"
 import s from "./Column.module.scss"
@@ -60,6 +60,13 @@ export default function Column(props: ColumnProps) {
 		}
 	}
 
+	const [now, setNow] = useState(Date.now())
+
+	useEffect(() => {
+		const interval = setInterval(() => setNow(Date.now()), 5000)
+		return () => clearInterval(interval)
+	}, [])
+
 	const workers = allUsers.filter(u => u.role === "WORKER")
 
 	return (
@@ -110,46 +117,69 @@ export default function Column(props: ColumnProps) {
 			</div>
 			<div className={s["pk-column__list"]}>
 				<AnimatePresence>
-					{props.orders.map((order) => (
-						<motion.div
-							key={order.id}
-							initial={{ opacity: 0 }}
-							animate={{ opacity: 1 }}
-							exit={{ opacity: 0 }}
-							transition={{ duration: 0.2 }}
-							whileHover={props.state !== "DELIVERED" ? { scale: 1.01 } : {}}
-							draggable={props.state !== "DELIVERED"}
-							onDragStart={(e) =>
-								props.state !== "DELIVERED" &&
-								handleDragStart(e as unknown as React.DragEvent, order.id)
-							}
-							onDragEnd={handleDragEnd}
-							className={classNames(s["pk-card"], {
-								[s["pk-card--delivered"]]: props.state === "DELIVERED",
-								[s["pk-card--assigned"]]: !!order.assignedTo,
-							})}
-						>
-							<div onClick={() => props.state !== "DELIVERED" && props.onClick && props.onClick(order)}>
-								<div className={s["pk-card__header"]}>
-									<span>Orden: <b>#{order.id}</b></span>
-									<span className={s["pk-card__badge"]}>{order.items.length} ítems</span>
-								</div>
-								<div className={s["pk-card__items"]}>
-									{order.items.map((item) => (
-										<div key={item.id} className={s["pk-card__item"]}>• {item.name}</div>
-									))}
-								</div>
-							</div>
+					{props.orders.map((order) => {
+						const elapsedMs = now - (order.createdAt || now)
+						const minutes = Math.floor(elapsedMs / 60000)
 
-							<div className={s["pk-card__assignment"]}>
-								{order.assignedTo && (
-									<div className={s["pk-card__assignee"]}>
-										👨‍🍳 {order.assignedTo}
+						const isActiveColumn = props.state === "PENDING" || props.state === "IN_PROGRESS" || props.state === "READY"
+
+						const warningLevel = !isActiveColumn
+							? "none"
+							: minutes >= 3 ? "urgent" : minutes >= 1 ? "warning" : "none"
+
+						const timeStr = new Date(order.createdAt).toLocaleTimeString([], {
+							hour: "2-digit",
+							minute: "2-digit",
+							hour12: false
+						})
+
+						return (
+							<motion.div
+								key={order.id}
+								initial={{ opacity: 0 }}
+								animate={{ opacity: 1 }}
+								exit={{ opacity: 0 }}
+								transition={{ duration: 0.2 }}
+								whileHover={props.state !== "DELIVERED" ? { scale: 1.01 } : {}}
+								draggable={props.state !== "DELIVERED"}
+								onDragStart={(e) =>
+									props.state !== "DELIVERED" &&
+									handleDragStart(e as unknown as React.DragEvent, order.id)
+								}
+								onDragEnd={handleDragEnd}
+								className={classNames(s["pk-card"], {
+									[s["pk-card--delivered"]]: props.state === "DELIVERED",
+									[s["pk-card--assigned"]]: !!order.assignedTo,
+									[s[`pk-card--${warningLevel}`]]: warningLevel !== "none",
+								})}
+							>
+								<div onClick={() => props.state !== "DELIVERED" && props.onClick && props.onClick(order)}>
+									<div className={s["pk-card__header"]}>
+										<div className={s["pk-card__id-group"]}>
+											<span>#{order.id}</span>
+											<span className={s["pk-card__time"]}>{timeStr}</span>
+											{warningLevel === "urgent" && <span className={s["pk-card__alert-icon"]}>🚨</span>}
+											{warningLevel === "warning" && <span className={s["pk-card__alert-icon"]}>⚠️</span>}
+										</div>
+										<span className={s["pk-card__badge"]}>{order.items.length} ítems</span>
 									</div>
-								)}
-							</div>
-						</motion.div>
-					))}
+									<div className={s["pk-card__items"]}>
+										{order.items.map((item) => (
+											<div key={item.id} className={s["pk-card__item"]}>• {item.name}</div>
+										))}
+									</div>
+								</div>
+
+								<div className={s["pk-card__assignment"]}>
+									{order.assignedTo && (
+										<div className={s["pk-card__assignee"]}>
+											👨‍🍳 {order.assignedTo}
+										</div>
+									)}
+								</div>
+							</motion.div>
+						)
+					})}
 				</AnimatePresence>
 			</div>
 		</div>

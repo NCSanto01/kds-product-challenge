@@ -44,7 +44,7 @@
     gap: 15px;
     backdrop-filter: blur(4px);
     animation: fadeIn 0.3s ease;
-    pointer-events: none; // Allow drag-and-drop to pass through the container
+    pointer-events: none;
   }
 
   &__worker-zone {
@@ -59,7 +59,7 @@
     border-radius: 16px;
     transition: all 0.2s ease;
     cursor: copy;
-    pointer-events: auto; // Re-enable pointer events for the drop zones
+    pointer-events: auto;
 
     span {
       color: $white;
@@ -133,7 +133,6 @@
     gap: 12px;
     padding: 4px;
 
-    // Custom scrollbar
     &::-webkit-scrollbar {
       width: 6px;
     }
@@ -169,24 +168,45 @@
     align-items: center;
     border-bottom: 1px solid $gray-100;
     padding-bottom: 8px;
+  }
 
-    b {
+  &__id-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    span:first-child {
       color: $primary;
+      font-weight: 700;
     }
   }
 
+  &__time {
+    font-size: 0.7rem;
+    color: $gray-400;
+    font-weight: 400;
+    background: $gray-1000;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  &__alert-icon {
+    font-size: 1rem;
+    animation: pulse 1s infinite alternate;
+  }
+
   &__badge {
-    background: $gray-100;
+    background: $gray-1000;
     padding: 2px 8px;
     border-radius: 20px;
     font-size: 0.75rem;
-    color: $gray-600;
+    color: $gray-400;
     font-weight: 500;
   }
 
   &__items {
     font-size: 0.85rem;
-    color: $gray-700;
+    color: $gray-200;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -211,6 +231,16 @@
     border: 2px solid rgba($secondary, 0.4);
   }
 
+  &--warning {
+    border: 2px solid #ffc107 !important;
+    background-color: #fffbef !important;
+  }
+
+  &--urgent {
+    border: 2px solid #f44336 !important;
+    background-color: #fff5f5 !important;
+  }
+
   &__assignment {
     margin-top: 4px;
     padding-top: 8px;
@@ -229,37 +259,62 @@
     padding: 2px 10px;
     border-radius: 20px;
   }
+}
 
-  &__unassigned {
-    font-size: 0.8rem;
-    color: $gray-400;
-    font-style: italic;
+@keyframes pulse {
+  from {
+    transform: scale(1);
+    opacity: 0.8;
   }
 
-  &__btn-assign {
-    background-color: $primary;
-    color: $white;
-    border: none;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
+  to {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
 
-    &:hover {
-      background-color: darken($primary, 10%);
-      transform: scale(1.05);
-    }
+@keyframes shake {
+  0% {
+    transform: translate(1px, 1px) rotate(0deg);
   }
 
-  &__admin-select {
-    padding: 2px 4px;
-    font-size: 0.75rem;
-    border-radius: 4px;
-    border: 1px solid $gray-200;
-    outline: none;
-    background: white;
-    max-width: 100px;
+  10% {
+    transform: translate(-1px, -2px) rotate(-1deg);
+  }
+
+  20% {
+    transform: translate(-3px, 0px) rotate(1deg);
+  }
+
+  30% {
+    transform: translate(3px, 2px) rotate(0deg);
+  }
+
+  40% {
+    transform: translate(1px, -1px) rotate(1deg);
+  }
+
+  50% {
+    transform: translate(-1px, 2px) rotate(-1deg);
+  }
+
+  60% {
+    transform: translate(-3px, 1px) rotate(0deg);
+  }
+
+  70% {
+    transform: translate(3px, 1px) rotate(-1deg);
+  }
+
+  80% {
+    transform: translate(-1px, -1px) rotate(1deg);
+  }
+
+  90% {
+    transform: translate(1px, 2px) rotate(0deg);
+  }
+
+  100% {
+    transform: translate(1px, -2px) rotate(-1deg);
   }
 }
