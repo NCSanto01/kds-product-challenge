@@ -75,7 +75,7 @@ Con esta serie de funcionalidades, la herramienta está enfocada a que cada empl
 ## Instrucciones de ejecución
 
 - Backend: Desde la carpeta "backend", ejecutar primero "npm install" y después ejecutar "npm run start:dev" para iniciar el servidor.
-- Frontend: Desde la carpeta "frontend", ejecutar primero "npm install" y después ejecutar "npm run dev" para iniciar el frontend.
+- Frontend: Desde la carpeta raíz, ejecutar primero "npm install" y después ejecutar "npm run dev" para iniciar el frontend.
 - Se recomienda abrir varias instancias del frontend en diferentes pestañas para comprobar el funcionamiento de los diferentes usuarios en tiempo real. 
 
 
